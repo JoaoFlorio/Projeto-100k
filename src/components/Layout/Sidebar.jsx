@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Users, Target, ChevronRight } from 'lucide-react'
+import { LayoutDashboard, Target, ChevronRight, LogOut } from 'lucide-react'
 
-export default function Sidebar({ students }) {
+export default function Sidebar({ students, onLogout }) {
   const loc = useLocation()
 
   const isActive = (path) => loc.pathname === path || loc.pathname.startsWith(path + '/')
@@ -44,8 +44,24 @@ export default function Sidebar({ students }) {
         ))}
       </nav>
 
-      <div style={{ padding: '16px 20px', borderTop: '1px solid #1e1e1e', fontSize: 11, color: '#444' }}>
-        v1.0 · João Florio
+      <div style={{ padding: '12px 16px', borderTop: '1px solid #1e1e1e' }}>
+        <button
+          onClick={onLogout}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            width: '100%', padding: '9px 10px',
+            background: 'none', border: '1px solid #1e1e1e',
+            borderRadius: 8, cursor: 'pointer',
+            color: '#555', fontSize: 12, fontWeight: 500,
+            transition: 'all 0.15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = '#ef444430'; e.currentTarget.style.color = '#ef4444' }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = '#1e1e1e'; e.currentTarget.style.color = '#555' }}
+        >
+          <LogOut size={13} />
+          Sair
+        </button>
+        <div style={{ marginTop: 8, fontSize: 10, color: '#333', paddingLeft: 2 }}>v1.0 · João Flório</div>
       </div>
     </aside>
   )
