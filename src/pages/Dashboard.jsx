@@ -7,6 +7,8 @@ import { calcDRE, calcHealthScore, fmtCurrency, getGoalPct } from '../utils/calc
 import StudentFormModal from '../components/Student/StudentFormModal'
 import RelatorioTurmaPDF from '../components/Student/RelatorioTurmaPDF'
 import BackupModal from '../components/Dashboard/BackupModal'
+import ResgateLocal from '../components/Dashboard/ResgateLocal'
+import { lerLegado } from '../data/legado'
 
 function HealthRing({ score }) {
   const r = 28
@@ -49,6 +51,8 @@ export default function Dashboard({ students, onAddStudent, onDeleteStudent, onI
   const [showBackupModal, setShowBackupModal] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [filterPhase, setFilterPhase] = useState(null)
+  const [legado, setLegado] = useState(() => lerLegado())
+  const [avisoResgate, setAvisoResgate] = useState('')
   const turmaPdfRef = useRef(null)
 
   const handlePrintTurma = useReactToPrint({
@@ -116,6 +120,21 @@ export default function Dashboard({ students, onAddStudent, onDeleteStudent, onI
       <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
         <RelatorioTurmaPDF ref={turmaPdfRef} students={students} />
       </div>
+
+      {/* Dados presos no navegador, da versão anterior ao banco */}
+      {legado.length > 0 && (
+        <ResgateLocal
+          legado={legado}
+          students={students}
+          onImport={onImportStudents}
+          onPronto={(msg) => { setLegado([]); setAvisoResgate(msg) }}
+        />
+      )}
+      {avisoResgate && (
+        <div style={{ border: '1px solid rgba(34,197,94,0.3)', background: 'rgba(34,197,94,0.07)', borderRadius: 10, padding: '12px 16px', marginBottom: 24, fontSize: 13, color: '#22c55e' }}>
+          {avisoResgate}
+        </div>
+      )}
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
         <div>
