@@ -8,13 +8,16 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:server": "node --env-file-if-exists=.env server/index.js",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "vite preview --port $PORT --host"
+    "start": "node server/index.js"
   },
   "dependencies": {
+    "express": "^5.2.1",
     "lucide-react": "^1.16.0",
+    "pg": "^8.22.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-router-dom": "^7.15.1",

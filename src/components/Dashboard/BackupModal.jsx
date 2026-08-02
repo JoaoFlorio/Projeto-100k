@@ -9,6 +9,7 @@ export default function BackupModal({ students, onImport, onClose }) {
   const [payload, setPayload] = useState(null)   // conteúdo válido do arquivo lido
   const [error, setError] = useState('')
   const [done, setDone] = useState('')
+  const [salvando, setSalvando] = useState(false)
   const fileRef = useRef(null)
 
   const exportBackup = () => {
@@ -52,20 +53,24 @@ export default function BackupModal({ students, onImport, onClose }) {
     reader.readAsText(file)
   }
 
-  const applyReplace = () => {
-    onImport(payload.students)
-    setDone(`${payload.students.length} mentorado(s) importado(s). Os dados anteriores foram substituídos.`)
+  const applyReplace = async () => {
+    setSalvando(true)
+    await onImport(payload.students)
+    setSalvando(false)
+    setDone(`${payload.students.length} mentorado(s) importado(s). A turma anterior foi substituída.`)
     setPayload(null)
   }
 
-  const applyMerge = () => {
+  const applyMerge = async () => {
     const existing = new Set(students.map(s => normalizeName(s.name)))
     const novos = payload.students.filter(s => !existing.has(normalizeName(s.name)))
-    onImport([...students, ...novos])
+    setSalvando(true)
+    await onImport([...students, ...novos])
+    setSalvando(false)
     setDone(
       novos.length === 0
-        ? 'Nenhum mentorado novo — todos os nomes do arquivo já existiam aqui.'
-        : `${novos.length} mentorado(s) adicionado(s). Os seus continuam intactos.`
+        ? 'Nenhum mentorado novo — todos os nomes do arquivo já existiam na turma.'
+        : `${novos.length} mentorado(s) adicionado(s). Os que já existiam continuam intactos.`
     )
     setPayload(null)
   }
@@ -93,15 +98,16 @@ export default function BackupModal({ students, onImport, onClose }) {
           </button>
         </div>
         <p style={{ fontSize: 12.5, color: '#666', margin: '0 0 22px', lineHeight: 1.5 }}>
-          Os dados ficam salvos apenas neste navegador. Use o backup para levar os mentorados
-          para outro computador ou para passar a outra pessoa da equipe.
+          A turma fica no banco compartilhado — todo mundo da equipe vê a mesma coisa.
+          Use o backup para guardar uma cópia de segurança ou para trazer mentorados
+          que ainda estavam salvos só no navegador de alguém.
         </p>
 
         {/* Exportar */}
         <div style={{ border: '1px solid #1e1e1e', borderRadius: 12, padding: 18, marginBottom: 14 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: '#f0f0f0', marginBottom: 4 }}>Exportar</div>
           <div style={{ fontSize: 12, color: '#666', marginBottom: 14 }}>
-            Baixa um arquivo .json com os {students.length} mentorado(s) deste navegador — DRE, sessões, produtos e perfil.
+            Baixa um arquivo .json com os {students.length} mentorado(s) da turma — DRE, sessões, produtos e perfil.
           </div>
           <button
             onClick={exportBackup}
@@ -115,7 +121,7 @@ export default function BackupModal({ students, onImport, onClose }) {
         <div style={{ border: '1px solid #1e1e1e', borderRadius: 12, padding: 18 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: '#f0f0f0', marginBottom: 4 }}>Importar</div>
           <div style={{ fontSize: 12, color: '#666', marginBottom: 14 }}>
-            Abre um backup gerado por outra pessoa e traz os mentorados dela para cá.
+            Abre um backup .json e sobe os mentorados dele para o banco compartilhado.
           </div>
 
           <input
@@ -150,19 +156,21 @@ export default function BackupModal({ students, onImport, onClose }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <button
                   onClick={applyReplace}
-                  style={{ textAlign: 'left', padding: '11px 14px', borderRadius: 9, background: 'linear-gradient(135deg, #e0ab42, #b8892f)', border: 'none', cursor: 'pointer', color: '#000' }}
+                  disabled={salvando}
+                  style={{ textAlign: 'left', padding: '11px 14px', borderRadius: 9, background: 'linear-gradient(135deg, #e0ab42, #b8892f)', border: 'none', cursor: salvando ? 'wait' : 'pointer', color: '#000', opacity: salvando ? 0.6 : 1 }}
                 >
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>Substituir tudo</div>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>{salvando ? 'Enviando...' : 'Substituir tudo'}</div>
                   <div style={{ fontSize: 11.5, opacity: 0.75, marginTop: 2 }}>
-                    Fica exatamente igual ao arquivo. Apaga os {students.length} mentorado(s) atuais deste navegador.
+                    A turma fica exatamente igual ao arquivo. Apaga os {students.length} mentorado(s) atuais — para todo mundo.
                   </div>
                 </button>
 
                 <button
                   onClick={applyMerge}
-                  style={{ textAlign: 'left', padding: '11px 14px', borderRadius: 9, background: '#1a1a1a', border: '1px solid #2a2a2a', cursor: 'pointer', color: '#ccc' }}
+                  disabled={salvando}
+                  style={{ textAlign: 'left', padding: '11px 14px', borderRadius: 9, background: '#1a1a1a', border: '1px solid #2a2a2a', cursor: salvando ? 'wait' : 'pointer', color: '#ccc', opacity: salvando ? 0.6 : 1 }}
                 >
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>Mesclar</div>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>{salvando ? 'Enviando...' : 'Mesclar'}</div>
                   <div style={{ fontSize: 11.5, color: '#777', marginTop: 2 }}>
                     Adiciona só quem ainda não existe aqui ({incomingNew.length} novo(s)). Mantém os seus como estão.
                   </div>

@@ -1,8 +1,11 @@
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Target, ChevronRight, LogOut } from 'lucide-react'
+import { LayoutDashboard, Target, ChevronRight, LogOut, Users } from 'lucide-react'
+import EquipeModal from './EquipeModal'
 
-export default function Sidebar({ students, onLogout }) {
+export default function Sidebar({ students, onLogout, email }) {
   const loc = useLocation()
+  const [showEquipe, setShowEquipe] = useState(false)
 
   const isActive = (path) => loc.pathname === path || loc.pathname.startsWith(path + '/')
 
@@ -46,6 +49,22 @@ export default function Sidebar({ students, onLogout }) {
 
       <div style={{ padding: '12px 16px', borderTop: '1px solid #1e1e1e' }}>
         <button
+          onClick={() => setShowEquipe(true)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            width: '100%', padding: '9px 10px', marginBottom: 8,
+            background: 'none', border: '1px solid #1e1e1e',
+            borderRadius: 8, cursor: 'pointer',
+            color: '#666', fontSize: 12, fontWeight: 500,
+            transition: 'all 0.15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = '#e0ab4240'; e.currentTarget.style.color = '#e0ab42' }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = '#1e1e1e'; e.currentTarget.style.color = '#666' }}
+        >
+          <Users size={13} />
+          Equipe
+        </button>
+        <button
           onClick={onLogout}
           style={{
             display: 'flex', alignItems: 'center', gap: 8,
@@ -61,8 +80,12 @@ export default function Sidebar({ students, onLogout }) {
           <LogOut size={13} />
           Sair
         </button>
-        <div style={{ marginTop: 8, fontSize: 10, color: '#333', paddingLeft: 2 }}>v1.0 · João Flório</div>
+        <div style={{ marginTop: 8, fontSize: 10, color: '#333', paddingLeft: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {email || 'v1.0 · João Flório'}
+        </div>
       </div>
+
+      {showEquipe && <EquipeModal meuEmail={email} onClose={() => setShowEquipe(false)} />}
     </aside>
   )
 }

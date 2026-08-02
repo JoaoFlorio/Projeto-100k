@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Credenciais locais (o .env.example é o modelo versionado)
+.env
+.env.local
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

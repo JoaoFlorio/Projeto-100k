@@ -1,33 +1,36 @@
 import { useState } from 'react'
-import { Target, Eye, EyeOff, Lock } from 'lucide-react'
-
-const APP_PASSWORD = import.meta.env.VITE_APP_PASSWORD || 'projeto100k'
+import { Target, Eye, EyeOff, Lock, Mail } from 'lucide-react'
+import { api } from '../data/api'
 
 export default function LoginPage({ onLogin }) {
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [shake, setShake] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!password) return
+    if (!email || !password) return
 
     setLoading(true)
-    setTimeout(() => {
-      if (password === APP_PASSWORD) {
-        localStorage.setItem('p100k_auth', '1')
-        onLogin()
-      } else {
-        setError('Senha incorreta. Tente novamente.')
-        setShake(true)
-        setTimeout(() => setShake(false), 500)
-        setPassword('')
-      }
+    setError('')
+
+    try {
+      const { user } = await api.login(email.trim(), password)
+      onLogin(user)
+    } catch (err) {
+      setError(err.message)
+      setShake(true)
+      setTimeout(() => setShake(false), 500)
+      setPassword('')
+    } finally {
       setLoading(false)
-    }, 400)
+    }
   }
+
+  const podeEnviar = email && password && !loading
 
   return (
     <div style={{
@@ -93,65 +96,86 @@ export default function LoginPage({ onLogin }) {
           </div>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#666', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
-              Senha de acesso
-            </label>
-            <div style={{ position: 'relative' }}>
-              <Lock size={15} color="#444" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={e => { setPassword(e.target.value); setError('') }}
-                placeholder="Digite a senha"
-                autoFocus
-                style={{
-                  width: '100%', padding: '13px 44px 13px 42px',
-                  background: '#1a1a1a',
-                  border: `1px solid ${error ? '#ef444460' : '#2a2a2a'}`,
-                  borderRadius: 10, color: '#f0f0f0', fontSize: 14, outline: 'none',
-                  boxSizing: 'border-box', transition: 'border-color 0.15s',
-                }}
-                onFocus={e => { if (!error) e.target.style.borderColor = '#e0ab4260' }}
-                onBlur={e => { if (!error) e.target.style.borderColor = '#2a2a2a' }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(v => !v)}
-                style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#444', padding: 4 }}
-              >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
-            {error && (
-              <div style={{ marginTop: 8, fontSize: 12, color: '#ef4444', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span>✕</span> {error}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#666', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+                E-mail
+              </label>
+              <div style={{ position: 'relative' }}>
+                <Mail size={15} color="#444" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => { setEmail(e.target.value); setError('') }}
+                  placeholder="seu@email.com"
+                  autoFocus
+                  autoComplete="email"
+                  style={{
+                    width: '100%', padding: '13px 14px 13px 42px',
+                    background: '#1a1a1a',
+                    border: `1px solid ${error ? '#ef444460' : '#2a2a2a'}`,
+                    borderRadius: 10, color: '#f0f0f0', fontSize: 14, outline: 'none',
+                    boxSizing: 'border-box', transition: 'border-color 0.15s',
+                  }}
+                />
               </div>
-            )}
-          </div>
+            </div>
 
-          <button
-            type="submit"
-            disabled={!password || loading}
-            style={{
-              width: '100%', padding: '14px',
-              background: password && !loading
-                ? 'linear-gradient(135deg, #e0ab42, #b8892f)'
-                : '#1a1a1a',
-              border: 'none',
-              borderRadius: 10,
-              color: password && !loading ? '#000' : '#444',
-              fontSize: 15, fontWeight: 700,
-              cursor: password && !loading ? 'pointer' : 'not-allowed',
-              transition: 'all 0.2s',
-              letterSpacing: '0.02em',
-            }}
-          >
-            {loading ? 'Verificando...' : 'Entrar'}
-          </button>
-        </form>
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#666', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+                Senha
+              </label>
+              <div style={{ position: 'relative' }}>
+                <Lock size={15} color="#444" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => { setPassword(e.target.value); setError('') }}
+                  placeholder="Digite a senha"
+                  autoComplete="current-password"
+                  style={{
+                    width: '100%', padding: '13px 44px 13px 42px',
+                    background: '#1a1a1a',
+                    border: `1px solid ${error ? '#ef444460' : '#2a2a2a'}`,
+                    borderRadius: 10, color: '#f0f0f0', fontSize: 14, outline: 'none',
+                    boxSizing: 'border-box', transition: 'border-color 0.15s',
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#444', padding: 4 }}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+              {error && (
+                <div style={{ marginTop: 8, fontSize: 12, color: '#ef4444', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span>✕</span> {error}
+                </div>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={!podeEnviar}
+              style={{
+                width: '100%', padding: '14px',
+                background: podeEnviar
+                  ? 'linear-gradient(135deg, #e0ab42, #b8892f)'
+                  : '#1a1a1a',
+                border: 'none',
+                borderRadius: 10,
+                color: podeEnviar ? '#000' : '#444',
+                fontSize: 15, fontWeight: 700,
+                cursor: podeEnviar ? 'pointer' : 'not-allowed',
+                transition: 'all 0.2s',
+                letterSpacing: '0.02em',
+              }}
+            >
+              {loading ? 'Entrando...' : 'Entrar'}
+            </button>
+          </form>
 
         {/* Footer */}
         <div style={{ marginTop: 28, paddingTop: 20, borderTop: '1px solid #1a1a1a', textAlign: 'center', fontSize: 11, color: '#333' }}>

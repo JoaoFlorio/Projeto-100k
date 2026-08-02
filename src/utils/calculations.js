@@ -61,3 +61,11 @@ export function getGoalPct(monthly, goal) {
   const total = monthly.reduce((s, m) => s + m.revenue, 0)
   return Math.min(100, (total / goal) * 100)
 }
+
+// Registro sem data (ou com data inválida vinda de um backup antigo) não pode
+// virar "Invalid Date" na tela.
+export function fmtDate(iso, opcoes = { day: '2-digit', month: 'long', year: 'numeric' }) {
+  if (!iso) return '—'
+  const d = new Date(iso + 'T12:00:00')
+  return isNaN(d) ? '—' : d.toLocaleDateString('pt-BR', opcoes)
+}

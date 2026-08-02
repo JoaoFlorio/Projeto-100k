@@ -7,7 +7,7 @@ import {
 } from 'recharts'
 import { ArrowLeft, MessageCircle, ChevronDown, ChevronUp, Plus, FileText, Pencil, Upload, Phone, Mail, AtSign, MapPin, Calendar, Target, StickyNote, Award } from 'lucide-react'
 import { Card, Badge } from '../components/ui/Card'
-import { calcDRE, calcHealthScore, fmtCurrency, fmtPct } from '../utils/calculations'
+import { calcDRE, calcHealthScore, fmtCurrency, fmtPct, fmtDate } from '../utils/calculations'
 import { ROADMAP_PHASES } from '../data/mockData'
 import MonthModal from '../components/Student/MonthModal'
 import ImportCSVModal from '../components/Student/ImportCSVModal'
@@ -233,7 +233,7 @@ export default function StudentProfile({ students, onAddMonthly, onUpdateMonthly
             <h1 style={{ fontSize: 24, fontWeight: 700, color: '#fff', margin: 0 }}>{student.name}</h1>
             <div style={{ display: 'flex', gap: 8, marginTop: 6, flexWrap: 'wrap', alignItems: 'center' }}>
               <Badge color="#e0ab42">M{currentMonth} — {ROADMAP_PHASES[currentMonth - 1]?.title}</Badge>
-              <span style={{ color: '#444', fontSize: 12 }}>Iniciou em {new Date(student.startDate + 'T12:00:00').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</span>
+              <span style={{ color: '#444', fontSize: 12 }}>Iniciou em {fmtDate(student.startDate, { month: 'long', year: 'numeric' })}</span>
             </div>
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
@@ -568,7 +568,7 @@ export default function StudentProfile({ students, onAddMonthly, onUpdateMonthly
       {activeTab === 'perfil' && (() => {
         const start = new Date(student.startDate + 'T12:00:00')
         const now = new Date()
-        const diffDays = Math.max(0, Math.floor((now - start) / (1000 * 60 * 60 * 24)))
+        const diffDays = isNaN(start) ? 0 : Math.max(0, Math.floor((now - start) / (1000 * 60 * 60 * 24)))
         const months = Math.floor(diffDays / 30)
         const days = diffDays % 30
 
@@ -612,7 +612,7 @@ export default function StudentProfile({ students, onAddMonthly, onUpdateMonthly
                 {/* Coluna direita */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {[
-                    { icon: <Calendar size={14} />, label: 'Data de início', value: new Date(student.startDate + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) },
+                    { icon: <Calendar size={14} />, label: 'Data de início', value: fmtDate(student.startDate) },
                     { icon: <Target size={14} />, label: 'Meta de faturamento', value: `R$ ${(student.goal || 100000).toLocaleString('pt-BR')}` },
                     { icon: <Award size={14} />, label: 'Fase atual', value: `M${student.currentMonth} — ${ROADMAP_PHASES[student.currentMonth - 1]?.title || ''}` },
                   ].map((f, i) => (
@@ -663,7 +663,7 @@ export default function StudentProfile({ students, onAddMonthly, onUpdateMonthly
                     <span style={{ color: '#e0ab42', fontWeight: 600 }}>{Math.min(100, ((diffDays / 180) * 100).toFixed(0))}%</span> da mentoria de 6 meses concluída
                   </div>
                   <div style={{ fontSize: 12, color: '#555', marginTop: 4 }}>
-                    Início: {new Date(student.startDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+                    Início: {fmtDate(student.startDate, { day: '2-digit', month: '2-digit', year: 'numeric' })}
                   </div>
                 </div>
               </div>
