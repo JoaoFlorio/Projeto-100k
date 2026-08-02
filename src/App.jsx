@@ -24,7 +24,7 @@ export default function App() {
 }
 
 function AppContent({ onLogout }) {
-  const { students, addStudent, deleteStudent, addMonthly, updateMonthly, addSession, updateSession, updateStudent } = useStudents()
+  const { students, setStudents, addStudent, deleteStudent, addMonthly, updateMonthly, addSession, updateSession, updateStudent } = useStudents()
 
   return (
     <BrowserRouter>
@@ -32,7 +32,7 @@ function AppContent({ onLogout }) {
         <Sidebar students={students} onLogout={onLogout} />
         <main style={{ flex: 1, overflowY: 'auto', minHeight: '100vh' }}>
           <Routes>
-            <Route path="/" element={<Dashboard students={students} onAddStudent={addStudent} onDeleteStudent={deleteStudent} />} />
+            <Route path="/" element={<Dashboard students={students} onAddStudent={addStudent} onDeleteStudent={deleteStudent} onImportStudents={setStudents} />} />
             <Route
               path="/aluno/:id"
               element={

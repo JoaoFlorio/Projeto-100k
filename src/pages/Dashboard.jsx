@@ -1,11 +1,12 @@
 import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useReactToPrint } from 'react-to-print'
-import { AlertTriangle, Award, Plus, Trash2, FileText, Download } from 'lucide-react'
+import { AlertTriangle, Award, Plus, Trash2, FileText, Download, Database } from 'lucide-react'
 import { Card, Badge } from '../components/ui/Card'
 import { calcDRE, calcHealthScore, fmtCurrency, getGoalPct } from '../utils/calculations'
 import StudentFormModal from '../components/Student/StudentFormModal'
 import RelatorioTurmaPDF from '../components/Student/RelatorioTurmaPDF'
+import BackupModal from '../components/Dashboard/BackupModal'
 
 function HealthRing({ score }) {
   const r = 28
@@ -43,8 +44,9 @@ function GoalBar({ pct }) {
   )
 }
 
-export default function Dashboard({ students, onAddStudent, onDeleteStudent }) {
+export default function Dashboard({ students, onAddStudent, onDeleteStudent, onImportStudents }) {
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showBackupModal, setShowBackupModal] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [filterPhase, setFilterPhase] = useState(null)
   const turmaPdfRef = useRef(null)
@@ -126,6 +128,12 @@ export default function Dashboard({ students, onAddStudent, onDeleteStudent }) {
             style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 16px', borderRadius: 8, background: '#1a1a1a', border: '1px solid #2a2a2a', color: '#aaa', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
           >
             <Download size={14} /> Exportar CSV
+          </button>
+          <button
+            onClick={() => setShowBackupModal(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 16px', borderRadius: 8, background: '#1a1a1a', border: '1px solid #2a2a2a', color: '#aaa', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+          >
+            <Database size={14} /> Backup
           </button>
           <button
             onClick={handlePrintTurma}
@@ -300,6 +308,15 @@ export default function Dashboard({ students, onAddStudent, onDeleteStudent }) {
           student={null}
           onSave={data => onAddStudent(data)}
           onClose={() => setShowAddModal(false)}
+        />
+      )}
+
+      {/* Modal de backup */}
+      {showBackupModal && (
+        <BackupModal
+          students={students}
+          onImport={onImportStudents}
+          onClose={() => setShowBackupModal(false)}
         />
       )}
 
