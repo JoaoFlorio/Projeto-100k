@@ -178,6 +178,26 @@ export default function StudentProfile({ students, onAddMonthly, onUpdateMonthly
   const [sincronizando, setSincronizando] = useState(false)
   const [resultadoSync, setResultadoSync] = useState(null)
 
+  // Liga a autorização do mentorado no Oráculo. Só deve ser usado quando ele
+  // concordou de fato — é o acordo da mentoria que autoriza, não o botão.
+  const autorizarNoOraculo = async () => {
+    setSincronizando(true)
+    setResultadoSync(null)
+    try {
+      await api.autorizarOraculo(student.id)
+      setResultadoSync({ ok: true, texto: `${student.oraculoEmail} autorizou a mentoria a ler os dados dele. Pode atualizar agora.` })
+    } catch (err) {
+      setResultadoSync({
+        ok: false,
+        texto: err.status === 404
+          ? `${student.oraculoEmail} não existe no Oráculo — confira o e-mail no perfil.`
+          : err.message,
+      })
+    } finally {
+      setSincronizando(false)
+    }
+  }
+
   // Busca o mês corrente do Oráculo e recarrega a turma para a tela refletir.
   const atualizarDoOraculo = async () => {
     setSincronizando(true)
@@ -196,7 +216,7 @@ export default function StudentProfile({ students, onAddMonthly, onUpdateMonthly
         : err.status === 404
           ? ' — esse e-mail não existe no Oráculo. Confira o endereço no perfil.'
           : ''
-      setResultadoSync({ ok: false, texto: err.message + dica })
+      setResultadoSync({ ok: false, texto: err.message + dica, precisaAutorizar: err.status === 403 })
     } finally {
       setSincronizando(false)
     }
@@ -320,6 +340,15 @@ export default function StudentProfile({ students, onAddMonthly, onUpdateMonthly
           {resultadoSync.texto}
           {resultadoSync.aviso && (
             <div style={{ marginTop: 6, color: '#e0ab42', fontSize: 12.5 }}>{resultadoSync.aviso}</div>
+          )}
+          {resultadoSync.precisaAutorizar && (
+            <button
+              onClick={autorizarNoOraculo}
+              disabled={sincronizando}
+              style={{ marginTop: 10, padding: '8px 14px', borderRadius: 8, background: '#1a1a1a', border: '1px solid #2a2a2a', color: '#ccc', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}
+            >
+              Registrar a autorização dele agora
+            </button>
           )}
         </div>
       )}
