@@ -3,12 +3,12 @@ import { X, User } from 'lucide-react'
 import { ROADMAP_PHASES } from '../../data/mockData'
 
 const EMPTY = {
-  name: '', whatsapp: '', email: '', instagram: '',
+  name: '', whatsapp: '', email: '', oraculoEmail: '', instagram: '',
   city: '', startDate: '', goal: '100000',
   currentMonth: '1', notes: '',
 }
 
-function Field({ label, name, value, onChange, placeholder, type = 'text', required }) {
+function Field({ label, name, value, onChange, placeholder, type = 'text', required, hint }) {
   return (
     <div>
       <label style={{ display: 'block', fontSize: 11, color: '#666', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.7 }}>
@@ -21,6 +21,7 @@ function Field({ label, name, value, onChange, placeholder, type = 'text', requi
         onFocus={e => e.target.style.borderColor = '#e0ab42'}
         onBlur={e => e.target.style.borderColor = '#2a2a2a'}
       />
+      {hint && <div style={{ fontSize: 11, color: '#555', marginTop: 4 }}>{hint}</div>}
     </div>
   )
 }
@@ -40,6 +41,7 @@ export default function StudentFormModal({ student = null, onSave, onClose }) {
     name: student.name || '',
     whatsapp: student.whatsapp || '',
     email: student.email || '',
+    oraculoEmail: student.oraculoEmail || '',
     instagram: student.instagram || '',
     city: student.city || '',
     startDate: student.startDate || today,
@@ -58,6 +60,7 @@ export default function StudentFormModal({ student = null, onSave, onClose }) {
       initials: initials(form.name),
       whatsapp: form.whatsapp.replace(/\D/g, ''),
       email: form.email.trim(),
+      oraculoEmail: form.oraculoEmail.trim().toLowerCase(),
       instagram: form.instagram.trim(),
       city: form.city.trim(),
       startDate: form.startDate,
@@ -122,6 +125,7 @@ export default function StudentFormModal({ student = null, onSave, onClose }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <Field label="WhatsApp (só números)" name="whatsapp" value={form.whatsapp} onChange={set} placeholder="35991234567" required />
               <Field label="E-mail" name="email" value={form.email} onChange={set} placeholder="joao@email.com" type="email" />
+              <Field label="E-mail no Oráculo" name="oraculoEmail" value={form.oraculoEmail} onChange={set} placeholder="a conta que ele usa no Oráculo" type="email" hint="Com isso o painel busca o faturamento sozinho." />
               <Field label="Instagram" name="instagram" value={form.instagram} onChange={set} placeholder="@joaosilva" />
             </div>
           </div>

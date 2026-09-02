@@ -39,7 +39,7 @@ function TelaCarregando({ texto }) {
 
 function AppContent({ user, onLogout }) {
   const {
-    students, loading, error,
+    students, loading, error, reload,
     addStudent, deleteStudent, replaceAll,
     addMonthly, updateMonthly, deleteMonthly, addSession, updateSession, deleteSession, updateStudent,
   } = useStudents()
@@ -70,6 +70,7 @@ function AppContent({ user, onLogout }) {
                   onUpdateSession={updateSession}
                   onDeleteSession={deleteSession}
                   onUpdateStudent={updateStudent}
+                  onRecarregar={reload}
                 />
               }
             />

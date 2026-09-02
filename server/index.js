@@ -5,6 +5,7 @@ import { existsSync } from 'node:fs'
 import { migrate } from './db.js'
 import { seedAdmin } from './auth.js'
 import { api } from './routes.js'
+import { agendarSincronizacao } from './agenda.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const dist = join(__dirname, '..', 'dist')
@@ -47,6 +48,7 @@ const inicio = async () => {
     process.exit(1)
   }
   app.listen(porta, () => console.log(`[server] ouvindo na porta ${porta}`))
+  agendarSincronizacao()
 }
 
 inicio()

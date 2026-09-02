@@ -69,3 +69,29 @@ bash scripts/testa-api.sh
 exclusão de mês/sessão/produto, import de backup e gestão da equipe. Ele **apaga os
 dados do banco** que está testando, por isso só roda contra `localhost` — a máquina
 não precisa ter Postgres instalado, dá para subir um descartável com `embedded-postgres`.
+
+## Integração com o Oráculo
+
+Cada mentorado pode ter um **e-mail do Oráculo** no perfil. Com ele, o painel busca
+o mês corrente pela portinha de parceiro (`/api/partner`) e preenche o DRE sozinho:
+faturamento, devoluções, taxas da Amazon, Ads, ACOS, unidades e ticket médio.
+
+O **CMV** não vem da Amazon (ela não sabe quanto custou o produto): sai do cruzamento
+das unidades vendidas por SKU com o **catálogo de custos** do aluno — se faltar custo
+de algum SKU, a tela avisa. Impostos, prep center, frete e contabilidade continuam
+vindo dos valores padrão do aluno.
+
+**Consentimento:** o Oráculo só entrega dados de quem autorizou a mentoria
+(`User.metadata.partner_mentoria`), com chave e flag próprios — separados dos da Sellion.
+
+| Variável | Para quê |
+|---|---|
+| `ORACULO_API_URL` | URL do backend do Oráculo (tem padrão de produção) |
+| `ORACULO_PARTNER_KEY` | chave de parceiro da mentoria (= `PARTNER_KEY_MENTORIA` no Oráculo) |
+| `ORACULO_SYNC_HORAS` | de quanto em quanto tempo atualiza sozinho (padrão: 6) |
+
+Sem `ORACULO_PARTNER_KEY` a integração fica dormente e o resto do sistema segue igual.
+
+```bash
+node scripts/testa-oraculo.mjs   # 20 verificações da tradução Oráculo → mês do 100K
+```

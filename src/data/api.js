@@ -35,6 +35,10 @@ export const api = {
   apagarStudent:  (id)        => req(`/students/${id}`, { method: 'DELETE' }),
   substituirTodos:(students)  => req('/students', { method: 'PUT', body: { students } }),
 
+  // Oráculo
+  sincronizarOraculo: (id, ano, mes) => req(`/students/${id}/oraculo/sync`, { method: 'POST', body: { ano, mes } }),
+  autorizarOraculo:   (id)           => req(`/students/${id}/oraculo/autorizar`, { method: 'POST', body: {} }),
+
   // equipe
   listarUsers: ()                 => req('/users'),
   criarUser:   (email, password, name) => req('/users', { method: 'POST', body: { email, password, name } }),

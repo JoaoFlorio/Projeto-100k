@@ -5,7 +5,7 @@ import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine
 } from 'recharts'
-import { ArrowLeft, MessageCircle, ChevronDown, ChevronUp, Plus, FileText, Pencil, Upload, Phone, Mail, AtSign, MapPin, Calendar, Target, StickyNote, Award, Trash2 } from 'lucide-react'
+import { ArrowLeft, MessageCircle, ChevronDown, ChevronUp, Plus, FileText, Pencil, Upload, Phone, Mail, AtSign, MapPin, Calendar, Target, StickyNote, Award, Trash2, RefreshCw } from 'lucide-react'
 import { Card, Badge } from '../components/ui/Card'
 import { calcDRE, calcHealthScore, fmtCurrency, fmtPct, fmtDate } from '../utils/calculations'
 import { ROADMAP_PHASES } from '../data/mockData'
@@ -15,6 +15,7 @@ import Calculadora from '../components/Student/Calculadora'
 import RelatorioPDF from '../components/Student/RelatorioPDF'
 import ProdutosCatalogo from '../components/Student/ProdutosCatalogo'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
+import { api } from '../data/api'
 import StudentFormModal from '../components/Student/StudentFormModal'
 import SessionModal from '../components/Student/SessionModal'
 
@@ -164,7 +165,7 @@ function Sessions({ sessions, onEdit, onDelete }) {
 }
 
 /* ── Main ────────────────────────────────────── */
-export default function StudentProfile({ students, onAddMonthly, onUpdateMonthly, onDeleteMonthly, onAddSession, onUpdateSession, onDeleteSession, onUpdateStudent }) {
+export default function StudentProfile({ students, onAddMonthly, onUpdateMonthly, onDeleteMonthly, onAddSession, onUpdateSession, onDeleteSession, onUpdateStudent, onRecarregar }) {
   const { id } = useParams()
   const [activeTab, setActiveTab] = useState('overview')
   const [showMonthModal, setShowMonthModal] = useState(false)
@@ -174,6 +175,32 @@ export default function StudentProfile({ students, onAddMonthly, onUpdateMonthly
   const [showSessionModal, setShowSessionModal] = useState(false)
   const [editingSession, setEditingSession] = useState(null)
   const [confirmarExclusao, setConfirmarExclusao] = useState(null)
+  const [sincronizando, setSincronizando] = useState(false)
+  const [resultadoSync, setResultadoSync] = useState(null)
+
+  // Busca o mês corrente do Oráculo e recarrega a turma para a tela refletir.
+  const atualizarDoOraculo = async () => {
+    setSincronizando(true)
+    setResultadoSync(null)
+    try {
+      const r = await api.sincronizarOraculo(student.id)
+      setResultadoSync({
+        ok: true,
+        texto: `${r.mes.label} atualizado: ${fmtCurrency(r.mes.revenue)} de faturamento, ${r.mes.units} unidades.`,
+        aviso: r.aviso,
+      })
+      onRecarregar?.()
+    } catch (err) {
+      const dica = err.status === 403
+        ? ' — o mentorado ainda não autorizou a mentoria a ler os dados dele no Oráculo.'
+        : err.status === 404
+          ? ' — esse e-mail não existe no Oráculo. Confira o endereço no perfil.'
+          : ''
+      setResultadoSync({ ok: false, texto: err.message + dica })
+    } finally {
+      setSincronizando(false)
+    }
+  }
   const pdfRef = useRef(null)
 
   const student = students.find(s => s.id === id)
@@ -248,6 +275,17 @@ export default function StudentProfile({ students, onAddMonthly, onUpdateMonthly
             </div>
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
+            {student.oraculoEmail && (
+              <button
+                onClick={atualizarDoOraculo}
+                disabled={sincronizando}
+                title={`Busca o mês atual da conta ${student.oraculoEmail} no Oráculo`}
+                style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 16px', borderRadius: 8, background: 'linear-gradient(135deg,#22c55e20,#16a34a10)', border: '1px solid #22c55e40', color: '#22c55e', fontSize: 13, fontWeight: 600, cursor: sincronizando ? 'wait' : 'pointer' }}
+              >
+                <RefreshCw size={14} style={sincronizando ? { animation: 'girando 1s linear infinite' } : undefined} />
+                {sincronizando ? 'Buscando...' : 'Atualizar do Oráculo'}
+              </button>
+            )}
             <button
               onClick={() => setShowImportModal(true)}
               style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 16px', borderRadius: 8, background: 'linear-gradient(135deg,#e0ab4220,#b8892f10)', border: '1px solid #e0ab4240', color: '#e0ab42', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
@@ -271,6 +309,22 @@ export default function StudentProfile({ students, onAddMonthly, onUpdateMonthly
           </div>
         </div>
       </div>
+
+      {resultadoSync && (
+        <div style={{
+          margin: '0 0 20px', padding: '12px 16px', borderRadius: 10, fontSize: 13, lineHeight: 1.6,
+          background: resultadoSync.ok ? 'rgba(34,197,94,0.07)' : 'rgba(239,68,68,0.08)',
+          border: `1px solid ${resultadoSync.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+          color: resultadoSync.ok ? '#22c55e' : '#ef4444',
+        }}>
+          {resultadoSync.texto}
+          {resultadoSync.aviso && (
+            <div style={{ marginTop: 6, color: '#e0ab42', fontSize: 12.5 }}>{resultadoSync.aviso}</div>
+          )}
+        </div>
+      )}
+
+      <style>{`@keyframes girando { to { transform: rotate(360deg) } }`}</style>
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 28, borderBottom: '1px solid #1a1a1a' }}>

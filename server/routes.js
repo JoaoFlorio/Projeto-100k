@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { randomUUID } from 'node:crypto'
 import { q, pool } from './db.js'
+import { buscarMes, aplicarMes, autorizar, oraculoConfigurado } from './oraculo.js'
 import {
   hashPassword, checkPassword, createSession, destroySession,
   setSessionCookie, clearSessionCookie, getSessionToken, requireAuth,
@@ -113,6 +114,65 @@ api.put('/students', requireAuth, async (req, res) => {
 
   const { rows } = await q(`select id, data from students order by created_at asc`)
   res.json({ students: rows.map(paraStudent) })
+})
+
+// ---------------- integração com o Oráculo ----------------
+
+// Traz o mês pedido (ou o mês corrente) do Oráculo e grava no histórico do aluno.
+// Substitui o mês se ele já existir — atualizar duas vezes não duplica linha.
+api.post('/students/:id/oraculo/sync', requireAuth, async (req, res) => {
+  if (!oraculoConfigurado()) {
+    return res.status(503).json({ error: 'Integração com o Oráculo não configurada (falta ORACULO_PARTNER_KEY).' })
+  }
+
+  const { rows } = await q(`select id, data from students where id = $1`, [req.params.id])
+  if (!rows.length) return res.status(404).json({ error: 'Mentorado não encontrado.' })
+
+  const aluno = rows[0].data
+  const email = String(aluno.oraculoEmail || '').trim().toLowerCase()
+  if (!email) return res.status(400).json({ error: 'Este mentorado não tem e-mail do Oráculo no perfil.' })
+
+  const agora = new Date()
+  const ano = Number(req.body?.ano) || agora.getUTCFullYear()
+  const mes = Number(req.body?.mes) || (agora.getUTCMonth() + 1)
+
+  try {
+    const { mes: novoMes, aviso, fonte } = await buscarMes({
+      email, ano, mes,
+      produtos: aluno.products || [],
+      defaults: aluno.defaults || {},
+    })
+
+    const monthly = aplicarMes(aluno, novoMes)
+
+    const atualizado = { ...aluno, monthly, oraculoSyncAt: new Date().toISOString() }
+    await q(`update students set data = $2, updated_at = now(), updated_by = $3 where id = $1`,
+      [req.params.id, atualizado, req.user.id])
+
+    res.json({ ok: true, student: { ...atualizado, id: req.params.id }, mes: novoMes, aviso, fonte })
+  } catch (err) {
+    // 403 = o mentorado ainda não autorizou; 404 = e-mail não existe no Oráculo
+    const status = err.status === 403 || err.status === 404 ? err.status : 502
+    res.status(status).json({ error: err.message, detalhe: err.corpo?.error })
+  }
+})
+
+// Liga a autorização do mentorado no Oráculo (flag próprio da mentoria).
+api.post('/students/:id/oraculo/autorizar', requireAuth, async (req, res) => {
+  if (!oraculoConfigurado()) {
+    return res.status(503).json({ error: 'Integração com o Oráculo não configurada.' })
+  }
+  const { rows } = await q(`select data from students where id = $1`, [req.params.id])
+  if (!rows.length) return res.status(404).json({ error: 'Mentorado não encontrado.' })
+
+  const email = String(rows[0].data.oraculoEmail || '').trim().toLowerCase()
+  if (!email) return res.status(400).json({ error: 'Este mentorado não tem e-mail do Oráculo no perfil.' })
+
+  try {
+    res.json(await autorizar(email))
+  } catch (err) {
+    res.status(err.status === 404 ? 404 : 502).json({ error: err.message })
+  }
 })
 
 // ---------------- equipe ----------------
