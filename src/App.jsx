@@ -41,7 +41,7 @@ function AppContent({ user, onLogout }) {
   const {
     students, loading, error,
     addStudent, deleteStudent, replaceAll,
-    addMonthly, updateMonthly, addSession, updateSession, updateStudent,
+    addMonthly, updateMonthly, deleteMonthly, addSession, updateSession, deleteSession, updateStudent,
   } = useStudents()
 
   if (loading) return <TelaCarregando texto="Carregando mentorados..." />
@@ -65,8 +65,10 @@ function AppContent({ user, onLogout }) {
                   students={students}
                   onAddMonthly={addMonthly}
                   onUpdateMonthly={updateMonthly}
+                  onDeleteMonthly={deleteMonthly}
                   onAddSession={addSession}
                   onUpdateSession={updateSession}
+                  onDeleteSession={deleteSession}
                   onUpdateStudent={updateStudent}
                 />
               }

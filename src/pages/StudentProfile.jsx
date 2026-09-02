@@ -5,7 +5,7 @@ import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine
 } from 'recharts'
-import { ArrowLeft, MessageCircle, ChevronDown, ChevronUp, Plus, FileText, Pencil, Upload, Phone, Mail, AtSign, MapPin, Calendar, Target, StickyNote, Award } from 'lucide-react'
+import { ArrowLeft, MessageCircle, ChevronDown, ChevronUp, Plus, FileText, Pencil, Upload, Phone, Mail, AtSign, MapPin, Calendar, Target, StickyNote, Award, Trash2 } from 'lucide-react'
 import { Card, Badge } from '../components/ui/Card'
 import { calcDRE, calcHealthScore, fmtCurrency, fmtPct, fmtDate } from '../utils/calculations'
 import { ROADMAP_PHASES } from '../data/mockData'
@@ -14,6 +14,7 @@ import ImportCSVModal from '../components/Student/ImportCSVModal'
 import Calculadora from '../components/Student/Calculadora'
 import RelatorioPDF from '../components/Student/RelatorioPDF'
 import ProdutosCatalogo from '../components/Student/ProdutosCatalogo'
+import ConfirmDialog from '../components/ui/ConfirmDialog'
 import StudentFormModal from '../components/Student/StudentFormModal'
 import SessionModal from '../components/Student/SessionModal'
 
@@ -100,7 +101,7 @@ function Roadmap({ roadmap, monthly }) {
 }
 
 /* ── Sessões ────────────────────────────────── */
-function Sessions({ sessions, onEdit }) {
+function Sessions({ sessions, onEdit, onDelete }) {
   const [open, setOpen] = useState(null)
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -124,11 +125,20 @@ function Sessions({ sessions, onEdit }) {
             <button
               onClick={() => onEdit(s)}
               title="Editar sessão"
-              style={{ padding: '0 16px', height: '100%', minHeight: 64, background: 'none', border: 'none', borderLeft: '1px solid #1a1a1a', cursor: 'pointer', color: '#444', flexShrink: 0 }}
+              style={{ padding: '0 14px', height: '100%', minHeight: 64, background: 'none', border: 'none', borderLeft: '1px solid #1a1a1a', cursor: 'pointer', color: '#444', flexShrink: 0 }}
               onMouseEnter={e => e.currentTarget.style.color = '#e0ab42'}
               onMouseLeave={e => e.currentTarget.style.color = '#444'}
             >
               <Pencil size={13} />
+            </button>
+            <button
+              onClick={() => onDelete(s)}
+              title="Excluir sessão"
+              style={{ padding: '0 14px', height: '100%', minHeight: 64, background: 'none', border: 'none', borderLeft: '1px solid #1a1a1a', cursor: 'pointer', color: '#444', flexShrink: 0 }}
+              onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+              onMouseLeave={e => e.currentTarget.style.color = '#444'}
+            >
+              <Trash2 size={13} />
             </button>
           </div>
           {open === s.id && (
@@ -154,7 +164,7 @@ function Sessions({ sessions, onEdit }) {
 }
 
 /* ── Main ────────────────────────────────────── */
-export default function StudentProfile({ students, onAddMonthly, onUpdateMonthly, onAddSession, onUpdateSession, onUpdateStudent }) {
+export default function StudentProfile({ students, onAddMonthly, onUpdateMonthly, onDeleteMonthly, onAddSession, onUpdateSession, onDeleteSession, onUpdateStudent }) {
   const { id } = useParams()
   const [activeTab, setActiveTab] = useState('overview')
   const [showMonthModal, setShowMonthModal] = useState(false)
@@ -163,6 +173,7 @@ export default function StudentProfile({ students, onAddMonthly, onUpdateMonthly
   const [showEditProfile, setShowEditProfile] = useState(false)
   const [showSessionModal, setShowSessionModal] = useState(false)
   const [editingSession, setEditingSession] = useState(null)
+  const [confirmarExclusao, setConfirmarExclusao] = useState(null)
   const pdfRef = useRef(null)
 
   const student = students.find(s => s.id === id)
@@ -372,13 +383,26 @@ export default function StudentProfile({ students, onAddMonthly, onUpdateMonthly
                 <Card key={i} style={{ padding: '20px 24px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: '#e0ab42' }}>{m.label}</div>
-                    <button
-                      onClick={() => { setEditingMonth({ month: m, index: i }); setShowMonthModal(true) }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444', padding: 2 }}
-                      title="Editar"
-                    >
-                      <Pencil size={13} />
-                    </button>
+                    <div style={{ display: 'flex', gap: 2 }}>
+                      <button
+                        onClick={() => { setEditingMonth({ month: m, index: i }); setShowMonthModal(true) }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444', padding: 2 }}
+                        title="Editar"
+                        onMouseEnter={e => e.currentTarget.style.color = '#e0ab42'}
+                        onMouseLeave={e => e.currentTarget.style.color = '#444'}
+                      >
+                        <Pencil size={13} />
+                      </button>
+                      <button
+                        onClick={() => setConfirmarExclusao({ tipo: 'mes', mes: m, index: i })}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444', padding: 2 }}
+                        title="Excluir este mês"
+                        onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                        onMouseLeave={e => e.currentTarget.style.color = '#444'}
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
                   </div>
                   <div style={{ fontSize: 11, color: '#444', marginBottom: 16 }}>Mês {m.month} de operação</div>
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -560,7 +584,7 @@ export default function StudentProfile({ students, onAddMonthly, onUpdateMonthly
               <Plus size={16} /> Nova Sessão
             </button>
           </div>
-          <Sessions sessions={sessions} onEdit={s => setEditingSession(s)} />
+          <Sessions sessions={sessions} onEdit={s => setEditingSession(s)} onDelete={s => setConfirmarExclusao({ tipo: 'sessao', sessao: s })} />
         </div>
       )}
 
@@ -695,6 +719,27 @@ export default function StudentProfile({ students, onAddMonthly, onUpdateMonthly
           session={editingSession}
           onSave={data => onUpdateSession(student.id, editingSession.id, data)}
           onClose={() => setEditingSession(null)}
+        />
+      )}
+
+      {/* Confirmação de exclusão de mês ou sessão */}
+      {confirmarExclusao?.tipo === 'mes' && (
+        <ConfirmDialog
+          titulo={`Excluir ${confirmarExclusao.mes.label}?`}
+          descricao={`O DRE deste mês (faturamento de ${fmtCurrency(confirmarExclusao.mes.revenue)}) sai do histórico de ${student.name}, dos gráficos e dos relatórios. Não dá para desfazer.`}
+          textoBotao="Excluir mês"
+          onConfirm={() => { onDeleteMonthly(student.id, confirmarExclusao.index); setConfirmarExclusao(null) }}
+          onCancel={() => setConfirmarExclusao(null)}
+        />
+      )}
+
+      {confirmarExclusao?.tipo === 'sessao' && (
+        <ConfirmDialog
+          titulo="Excluir esta sessão?"
+          descricao={`A call de ${fmtDate(confirmarExclusao.sessao.date)}, com as anotações e ${confirmarExclusao.sessao.actions.length === 1 ? 'a ação definida' : `as ${confirmarExclusao.sessao.actions.length} ações definidas`}, será apagada. Não dá para desfazer.`}
+          textoBotao="Excluir sessão"
+          onConfirm={() => { onDeleteSession(student.id, confirmarExclusao.sessao.id); setConfirmarExclusao(null) }}
+          onCancel={() => setConfirmarExclusao(null)}
         />
       )}
 

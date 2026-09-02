@@ -115,6 +115,10 @@ export function useStudents() {
     })
   }
 
+  const deleteMonthly = (studentId, monthIndex) => {
+    updateStudent(studentId, s => ({ monthly: s.monthly.filter((_, i) => i !== monthIndex) }))
+  }
+
   const addSession = (studentId, session) => {
     updateStudent(studentId, s => ({
       sessions: [...s.sessions, { ...session, id: crypto.randomUUID() }]
@@ -127,6 +131,10 @@ export function useStudents() {
         sess.id === sessionId ? { ...sess, ...updatedSession } : sess
       )
     }))
+  }
+
+  const deleteSession = (studentId, sessionId) => {
+    updateStudent(studentId, s => ({ sessions: s.sessions.filter(sess => sess.id !== sessionId) }))
   }
 
   // Catálogo de produtos por aluno
@@ -150,7 +158,7 @@ export function useStudents() {
   return {
     students, loading, error, reload: load,
     replaceAll, updateStudent, addStudent, deleteStudent,
-    addMonthly, updateMonthly, addSession, updateSession,
+    addMonthly, updateMonthly, deleteMonthly, addSession, updateSession, deleteSession,
     addProduct, removeProduct, updateDefaults,
   }
 }

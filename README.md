@@ -58,3 +58,14 @@ Toda edição salva na hora; a tela recarrega sozinha quando volta ao foco e a c
 O botão **Backup** exporta a turma num `.json` e importa de volta (substituindo tudo
 ou mesclando só os nomes novos) — cópia de segurança e caminho para subir dados que
 estavam presos no navegador de alguém.
+
+## Testes
+
+```bash
+bash scripts/testa-api.sh
+```
+
+31 verificações de ponta a ponta: login, bloqueio sem sessão, CRUD de mentorados,
+exclusão de mês/sessão/produto, import de backup e gestão da equipe. Ele **apaga os
+dados do banco** que está testando, por isso só roda contra `localhost` — a máquina
+não precisa ter Postgres instalado, dá para subir um descartável com `embedded-postgres`.

@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Plus, Trash2, Package } from 'lucide-react'
+import ConfirmDialog from '../ui/ConfirmDialog'
 import { fmtCurrency } from '../../utils/calculations'
 import { Card } from '../ui/Card'
 
 export default function ProdutosCatalogo({ student, onUpdateStudent }) {
+  const [confirmar, setConfirmar] = useState(null)
   const products = student.products || []
   const defaults = student.defaults || {}
 
@@ -122,7 +124,7 @@ export default function ProdutosCatalogo({ student, onUpdateStudent }) {
                 </div>
                 <span style={{ fontSize: 12, color: '#555', fontFamily: 'monospace' }}>{p.asin || '—'}</span>
                 <span style={{ fontSize: 14, fontWeight: 700, color: '#e0ab42' }}>{fmtCurrency(p.cost)}</span>
-                <button onClick={() => removeProduct(p.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444', padding: 4 }}>
+                <button onClick={() => setConfirmar(p)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444', padding: 4 }}>
                   <Trash2 size={14} />
                 </button>
               </div>
@@ -176,6 +178,15 @@ export default function ProdutosCatalogo({ student, onUpdateStudent }) {
           ))}
         </div>
       </Card>
+      {confirmar && (
+        <ConfirmDialog
+          titulo={`Excluir ${confirmar.name}?`}
+          descricao="O produto sai do catálogo. Os meses já lançados com o CMV calculado por ele continuam como estão."
+          textoBotao="Excluir produto"
+          onConfirm={() => { removeProduct(confirmar.id); setConfirmar(null) }}
+          onCancel={() => setConfirmar(null)}
+        />
+      )}
     </div>
   )
 }
